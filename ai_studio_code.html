@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Boost Studio Pro - Watch Time & Viral Views Engine</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* Animated Cyber Grid Background */
+    .bg-mesh-glow {
+      background: radial-gradient(circle at 50% 0%, rgba(225, 29, 72, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 100% 50%, rgba(239, 68, 68, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                  #070709;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: rgba(18, 18, 23, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+    .glass-card-hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(239, 68, 68, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -10px rgba(239, 68, 68, 0.18);
+    }
+
+    /* Glowing borders */
+    .pro-glow-border {
+      position: relative;
+    }
+    .pro-glow-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, #ef4444, #f59e0b, #ec4899);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-mesh-glow text-zinc-100 min-h-screen flex flex-col pb-24 sm:pb-8 selection:bg-rose-500 selection:text-white">
+
+  <!-- ================= TOP HEADER ================= -->
+  <header class="bg-[#0e0e13]/85 backdrop-blur-2xl border-b border-zinc-800/80 sticky top-0 z-40 shadow-2xl">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-2.5 cursor-pointer select-none group" onclick="switchTab('home')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 via-red-600 to-amber-500 p-0.5 shadow-lg shadow-rose-600/30 group-hover:scale-105 transition transform">
+          <div class="w-full h-full bg-[#0e0e13] rounded-[14px] flex items-center justify-center">
+            <i class="fa-brands fa-youtube text-xl text-rose-500"></i>
+          </div>
+        </div>
+        <div>
+          <span class="text-base sm:text-lg font-black tracking-tight text-white flex items-center">
+            BOOST<span class="bg-gradient-to-r from-rose-500 via-red-500 to-amber-400 bg-clip-text text-transparent ml-0.5">STUDIO</span>
+          </span>
+          <span class="block text-[9px] font-black uppercase tracking-widest text-zinc-400 -mt-1">
+            4000h Watch Engine
+          </span>
+        </div>
+      </div>
+
+      <!-- Mode Badge: Normal vs PRO (Auto Switches After Deposit) -->
+      <div class="flex items-center space-x-2.5">
+        <div id="mode-badge-pill" class="px-3.5 py-1.5 rounded-full text-xs font-black flex items-center space-x-1.5 transition-all duration-300 bg-zinc-800/90 border border-zinc-700/80 text-zinc-400 shadow-md">
+          <span id="mode-status-dot" class="w-2 h-2 rounded-full bg-zinc-500"></span>
+          <span id="mode-text-label">NORMAL MODE</span>
+        </div>
+
+        <button onclick="switchTab('profile')" class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-300 transition">
+          <i class="fa-solid fa-user text-xs"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= NOTIFICATION TOAST ================= -->
+  <div id="toast-banner" class="hidden fixed top-16 right-4 z-50 max-w-sm p-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center justify-between border transition-all duration-300">
+    <div class="flex items-center space-x-2.5">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-base"></i>
+      <span id="toast-msg">Success</span>
+    </div>
+    <button onclick="hideToast()"><i class="fa-solid fa-xmark text-zinc-400 ml-3"></i></button>
+  </div>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- ============================================================== -->
+    <!-- 1. TAB: HOME (CAMPAIGN LAUNCH & YT INSPECTOR)                  -->
+    <!-- ============================================================== -->
+    <section id="tab-home-view" class="space-y-6">
+      
+      <!-- Mode Status Banner -->
+      <div id="hero-status-card" class="glass-card rounded-3xl p-5 sm:p-6 relative overflow-hidden border border-zinc-800/80">
+        <div class="absolute -right-8 -bottom-8 text-rose-500/5 text-9xl pointer-events-none font-black">
+          <i class="fa-brands fa-youtube"></i>
+        </div>
+        <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <span id="hero-badge-tag" class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border tracking-wider inline-flex items-center bg-amber-500/10 text-amber-400 border-amber-500/20">
+              <i class="fa-solid fa-shield-halved mr-1"></i> Deposit Required To Activate Engine
+            </span>
+            <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Instant Watch Time & Views Deployment
+            </h2>
+            <p class="text-xs text-zinc-400 max-w-lg leading-relaxed">
+              Deposit minimum ₹299 trial or ₹1,000 full monetization package to unlock unlimited server execution and send high-retention watch time.
+            </p>
+          </div>
+          <button onclick="switchTab('deposit')" id="hero-cta-btn" class="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-black text-xs shadow-lg shadow-rose-600/25 transition active:scale-95 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Deposit & Unlock Pro</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- YT URL Input & Live Inspector Box -->
+      <div class="glass-card rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 border border-zinc-800/80">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
+            <i class="fa-brands fa-youtube text-rose-500 mr-1.5 text-sm"></i> YouTube Video Link Inspector
+          </label>
+          <span class="text-[10px] text-zinc-500 font-bold">Auto-Fetches Title & HD Thumbnail</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <div class="relative flex-grow">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-500 pointer-events-none">
+              <i class="fa-solid fa-link"></i>
+            </span>
+            <input type="url" id="input-yt-url" oninput="handleUrlInput(event)" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+              class="w-full pl-9 pr-4 py-3.5 bg-[#0a0a0e] border border-zinc-700/80 rounded-2xl text-xs sm:text-sm font-semibold text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500 transition">
+          </div>
+          <button type="button" onclick="inspectVideoManually()" class="px-6 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-black text-xs rounded-2xl border border-zinc-700 transition flex items-center justify-center space-x-1.5 active:scale-95">
+            <i class="fa-solid fa-magnifying-glass text-rose-400"></i>
+            <span>Inspect</span>
+          </button>
+        </div>
+
+        <!-- Video Live Preview Card (Appears dynamically upon link entry) -->
+        <div id="video-preview-box" class="hidden p-4 rounded-2xl bg-[#09090d] border border-zinc-800 space-y-3">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div class="relative flex-shrink-0 w-full sm:w-40 h-24 rounded-xl overflow-hidden border border-zinc-700 bg-black">
+              <img id="preview-thumbnail" src="" class="w-full h-full object-cover">
+              <span class="absolute bottom-1 right-1 bg-black/80 text-[9px] font-mono font-bold px-1 rounded text-white">HD Preview</span>
+            </div>
+            <div class="space-y-1.5 flex-grow">
+              <span class="text-[9px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">Video Connected</span>
+              <h4 id="preview-title" class="text-xs sm:text-sm font-extrabold text-white line-clamp-2">Loading YouTube Video Title...</h4>
+              <p class="text-[11px] text-zinc-400 flex items-center">
+                <i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Ready for Watch Time & Views Injection
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target Country Selector with Flags -->
+        <div class="space-y-1.5 pt-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-zinc-300">
+            <i class="fa-solid fa-globe text-cyan-400 mr-1.5"></i> Select Target Country Audience
+          </label>
+          <div class="relative">
+            <select id="country-select" class="w-full px-4 py-3.5 bg-[#0a0a0e] border border-zinc-700/80 rounded-2xl text-xs sm:text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-rose-500 appearance-none cursor-pointer">
+              <option value="🇮🇳 India (High Retention)">🇮🇳 India (Fastest Delivery • High Retention)</option>
+              <option value="🇺🇸 United States (High CPM)">🇺🇸 United States (High CPM Tier 1)</option>
+              <option value="🇬🇧 United Kingdom">🇬🇧 United Kingdom (Tier 1 English)</option>
+              <option value="🇨🇦 Canada">🇨🇦 Canada (High Revenue Audience)</option>
+              <option value="🇦🇺 Australia">🇦🇺 Australia (Pacific High Watch Rate)</option>
+              <option value="🇩🇪 Germany">🇩🇪 Germany (European Monetization)</option>
+              <option value="🇦🇪 United Arab Emirates">🇦🇪 United Arab Emirates (Middle East Premium)</option>
+              <option value="🌐 Global Mixed Servers">🌐 Worldwide / Mixed Traffic (Fast Spread)</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-400">
+              <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Launch Button -->
+        <button onclick="handleLaunchCampaign()" id="btn-launch-campaign" class="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-wider transition-all duration-300 shadow-xl flex items-center justify-center space-x-2 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white shadow-rose-600/20 active:scale-[0.99]">
+          <i class="fa-solid fa-rocket text-sm"></i>
+          <span id="btn-launch-text">Deploy Watch Time & Boost Views</span>
+        </button>
+
+        <!-- 10-Minute YT Studio Delivery Notice -->
+        <div class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-1.5 text-xs text-amber-200">
+          <div class="flex items-center space-x-2 font-bold text-amber-400">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Delivery Timeline & YT Studio Guarantee</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Order execute hone ke theek <strong>10 minute baad</strong> apne YT Studio app me check karein; video par genuine watch time hours aur views flow aana shuru ho jayega.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Pricing Plans Preview Cards -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-black uppercase tracking-wider text-zinc-400 flex items-center">
+            <i class="fa-solid fa-tags text-rose-500 mr-2"></i> Deployment Tiers & What You Get
+          </h3>
+          <span onclick="switchTab('deposit')" class="text-xs font-bold text-rose-400 cursor-pointer hover:underline">Deposit Now →</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Card 1 -->
+          <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-zinc-800">
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">Starter Trial</span>
+              <span class="text-base font-black text-white">₹299</span>
+            </div>
+            <ul class="text-[11px] space-y-1 text-zinc-400 font-medium">
+              <li class="text-zinc-200 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 2,000 Watch Hours</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 15,000 High-Retention Views</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 10-Minute Initial Rollout</li>
+            </ul>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-rose-500/40 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-rose-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-bl text-white">Popular</div>
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">Monetization Pro</span>
+              <span class="text-base font-black text-rose-400">₹1,000</span>
+            </div>
+            <ul class="text-[11px] space-y-1 text-zinc-400 font-medium">
+              <li class="text-zinc-200 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> Full 4,000 Watch Hours</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 35,000 Targeted Views</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 100% Monetization Safe</li>
+            </ul>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="glass-card rounded-2xl p-4 space-y-2.5 border border-amber-500/40">
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">VIP Viral Max</span>
+              <span class="text-base font-black text-amber-400">₹1,200</span>
+            </div>
+            <ul class="text-[11px] space-y-1 text-zinc-400 font-medium">
+              <li class="text-zinc-200 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 4,000+ Hours Guaranteed</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> 50,000+ Algorithmic Views</li>
+              <li><i class="fa-solid fa-check text-emerald-400 mr-1.5"></i> Lifetime Drop Protection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 2. TAB: DEPOSIT SECTION (₹299, ₹1,000, ₹1,200 PLANS)           -->
+    <!-- ============================================================== -->
+    <section id="tab-deposit-view" class="hidden space-y-6">
+      
+      <!-- Top Deposit Banner -->
+      <div class="glass-card rounded-3xl p-6 relative overflow-hidden border border-zinc-800">
+        <div class="relative z-10 space-y-2">
+          <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            Instant Pro Activation Gate
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-white">Deposit & Upgrade to PRO Mode</h2>
+          <p class="text-xs text-zinc-400 leading-relaxed max-w-xl">
+            Choose your fixed deployment package below. Deposit activates <strong>PRO Mode</strong> permanently, unlocks unlimited campaigns, and queues your server clusters.
+          </p>
+        </div>
+      </div>
+
+      <!-- Deposit Packages Grid (Strict Fixed Amounts) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        
+        <!-- Package 1: ₹299 -->
+        <div class="glass-card rounded-3xl p-6 space-y-4 border border-zinc-800 glass-card-hover flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-zinc-800 text-zinc-300 flex items-center justify-center text-xl font-black">
+              ₹
+            </div>
+            <div>
+              <span class="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Starter Trial Pack</span>
+              <h3 class="text-2xl font-black text-white">₹299 <span class="text-xs font-normal text-zinc-500">INR</span></h3>
+            </div>
+            <p class="text-xs text-zinc-400">Best for initial proof of delivery on single YouTube video.</p>
+            <div class="space-y-1.5 pt-2 border-t border-zinc-800/80 text-xs">
+              <div class="flex items-center text-zinc-200 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 2,000 Watch Hours</div>
+              <div class="flex items-center text-zinc-400"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 15,000 Targeted Views</div>
+              <div class="flex items-center text-zinc-400"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> Unlocks PRO Mode</div>
+            </div>
+          </div>
+          <button onclick="triggerDeposit(299, '2,000 Hours + 15k Views')" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-black text-xs rounded-xl border border-zinc-700 transition active:scale-95 mt-4">
+            Deposit ₹299 (Trial)
+          </button>
+        </div>
+
+        <!-- Package 2: ₹1,000 -->
+        <div class="glass-card rounded-3xl p-6 space-y-4 border border-rose-500/50 glass-card-hover flex flex-col justify-between relative overflow-hidden shadow-xl shadow-rose-500/10">
+          <div class="absolute top-3 right-3 bg-rose-600 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full text-white">Recommended</div>
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl font-black border border-rose-500/30">
+              ₹
+            </div>
+            <div>
+              <span class="text-[10px] font-black uppercase text-rose-400 tracking-wider">Monetization Standard</span>
+              <h3 class="text-2xl font-black text-white">₹1,000 <span class="text-xs font-normal text-zinc-500">INR</span></h3>
+            </div>
+            <p class="text-xs text-zinc-400">Complete 4,000 watch hours requirements for monetization partner status.</p>
+            <div class="space-y-1.5 pt-2 border-t border-zinc-800/80 text-xs">
+              <div class="flex items-center text-zinc-100 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 4,000 Full Watch Hours</div>
+              <div class="flex items-center text-zinc-300 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 35,000 High-Retention Views</div>
+              <div class="flex items-center text-zinc-400"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 100% Monetization Safe</div>
+            </div>
+          </div>
+          <button onclick="triggerDeposit(1000, '4,000 Hours + 35k Views')" class="w-full py-3 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs rounded-xl shadow-lg shadow-rose-600/25 transition active:scale-95 mt-4">
+            Deposit ₹1,000 (Monetize)
+          </button>
+        </div>
+
+        <!-- Package 3: ₹1,200 -->
+        <div class="glass-card rounded-3xl p-6 space-y-4 border border-amber-500/50 glass-card-hover flex flex-col justify-between shadow-xl shadow-amber-500/10">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl font-black border border-amber-500/30">
+              ₹
+            </div>
+            <div>
+              <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider">VIP Instant Viral</span>
+              <h3 class="text-2xl font-black text-white">₹1,200 <span class="text-xs font-normal text-zinc-500">INR</span></h3>
+            </div>
+            <p class="text-xs text-zinc-400">Maximum priority speed, algorithmic push & lifetime watch guarantee.</p>
+            <div class="space-y-1.5 pt-2 border-t border-zinc-800/80 text-xs">
+              <div class="flex items-center text-zinc-100 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 4,000+ Hours Max Delivery</div>
+              <div class="flex items-center text-zinc-300 font-bold"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> 50,000+ Algorithmic Views</div>
+              <div class="flex items-center text-zinc-400"><i class="fa-solid fa-check text-emerald-400 mr-2"></i> Permanent Server Cluster</div>
+            </div>
+          </div>
+          <button onclick="triggerDeposit(1200, '4,000+ Hours + 50k Views')" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-zinc-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition active:scale-95 mt-4">
+            Deposit ₹1,200 (VIP Max)
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Trust Notice Card -->
+      <div class="glass-card rounded-2xl p-5 border border-zinc-800 space-y-2 text-xs text-zinc-400">
+        <h4 class="font-extrabold text-white uppercase tracking-wider flex items-center">
+          <i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i> Why is ₹299 Trial Provided?
+        </h4>
+        <p class="leading-relaxed">
+          The ₹299 tier is designed purely as an initial validation plan so creators can test our high-retention servers with zero risk. Once completed, your channel analytics will verify delivery in YouTube Studio within 10 minutes.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 3. TAB: PROFILE & CAMPAIGN LOGS                               -->
+    <!-- ============================================================== -->
+    <section id="tab-profile-view" class="hidden space-y-6">
+      
+      <!-- User Profile Header -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
+          <div class="relative">
+            <img id="user-dp-img" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" class="w-16 h-16 rounded-2xl object-cover border-2 border-rose-500/60 shadow-lg shadow-rose-500/20">
+            <button onclick="triggerDpChange()" title="Change Avatar" class="absolute -bottom-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white w-6 h-6 rounded-lg text-[10px] flex items-center justify-center shadow">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+          </div>
+          <div>
+            <div class="flex items-center justify-center sm:justify-start space-x-2">
+              <h3 id="user-display-name" class="text-base sm:text-lg font-black text-white">Aryan Kelvin Creator</h3>
+              <i class="fa-solid fa-circle-check text-rose-500 text-xs"></i>
+            </div>
+            <p class="text-xs text-zinc-400 font-semibold font-mono">Channel ID: @aryankelvin_official</p>
+            <div class="flex items-center space-x-2 mt-2 justify-center sm:justify-start">
+              <span id="profile-tier-badge" class="text-[10px] font-black px-2.5 py-0.5 rounded-full border bg-zinc-800 text-zinc-400 border-zinc-700">
+                NORMAL USER
+              </span>
+              <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/20">
+                YPP Compliant Engine
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="switchTab('deposit')" class="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-amber-500 text-white font-black text-xs rounded-xl shadow-lg transition">
+          Upgrade Tiers
+        </button>
+      </div>
+
+      <!-- Deployed Campaigns History -->
+      <div class="glass-card rounded-3xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center">
+            <i class="fa-solid fa-list-check text-rose-500 mr-2"></i> Active Deployed Campaigns
+          </h4>
+          <span class="text-[10px] text-zinc-500 font-bold">Realtime Queue</span>
+        </div>
+
+        <div id="campaign-history-list" class="space-y-3">
+          <!-- Dynamic campaigns added here -->
+          <div id="empty-campaign-state" class="text-center py-10 text-zinc-500 text-xs space-y-2">
+            <i class="fa-solid fa-clapperboard text-3xl text-zinc-600"></i>
+            <p>No campaigns executed yet. Paste a link on Home to deploy.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#0e0e13]/90 backdrop-blur-2xl border-t border-zinc-800/80 z-50 py-2 sm:py-3 shadow-2xl">
+    <div class="max-w-md mx-auto grid grid-cols-3 gap-2 px-4">
+      
+      <button onclick="switchTab('home')" id="nav-btn-home" class="flex flex-col items-center justify-center py-1 rounded-xl text-rose-500 font-bold text-xs transition">
+        <i class="fa-solid fa-house text-lg mb-1"></i>
+        <span>Home</span>
+      </button>
+
+      <button onclick="switchTab('deposit')" id="nav-btn-deposit" class="flex flex-col items-center justify-center py-1 rounded-xl text-zinc-400 font-bold text-xs transition">
+        <i class="fa-solid fa-wallet text-lg mb-1"></i>
+        <span>Deposit</span>
+      </button>
+
+      <button onclick="switchTab('profile')" id="nav-btn-profile" class="flex flex-col items-center justify-center py-1 rounded-xl text-zinc-400 font-bold text-xs transition">
+        <i class="fa-solid fa-user-gear text-lg mb-1"></i>
+        <span>Profile</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ================= DEPOSIT CONFIRMATION MODAL ================= -->
+  <div id="deposit-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-sm w-full p-6 space-y-4 border border-rose-500/30 text-center relative shadow-2xl">
+      <div class="w-14 h-14 mx-auto bg-gradient-to-tr from-rose-600 to-amber-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-rose-600/30">
+        <i class="fa-solid fa-qrcode"></i>
+      </div>
+
+      <div class="space-y-1">
+        <h3 class="text-base font-black text-white">Confirm Deposit</h3>
+        <p class="text-xs text-zinc-400">Unlock Permanent PRO Mode & Start Processing</p>
+      </div>
+
+      <div class="p-3.5 bg-[#09090d] rounded-2xl border border-zinc-800 text-left space-y-1.5 text-xs">
+        <div class="flex justify-between text-zinc-400"><span>Plan Amount:</span> <strong id="modal-deposit-amount" class="text-white">₹299 INR</strong></div>
+        <div class="flex justify-between text-zinc-400"><span>Package:</span> <strong id="modal-deposit-pack" class="text-rose-400">2,000 Hours + 15k Views</strong></div>
+        <div class="flex justify-between text-zinc-400"><span>Engine Access:</span> <strong class="text-emerald-400">Permanent PRO Status</strong></div>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <button onclick="executeDepositSuccess()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-zinc-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition active:scale-95">
+          <i class="fa-solid fa-check-circle mr-1"></i> Confirm & Activate PRO Mode
+        </button>
+        <button onclick="closeDepositModal()" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl transition">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT APP ENGINE ================= -->
+  <script>
+    // App State from LocalStorage
+    let appState = JSON.parse(localStorage.getItem('yt_boost_state')) || {
+      isPro: false,
+      userDp: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+      campaigns: []
+    };
+
+    let activeVideoMeta = null;
+    let pendingDepositPlan = null;
+
+    // Initialize App UI
+    function initApp() {
+      updateModeUI();
+      renderCampaignHistory();
+    }
+
+    // Mode UI Updater
+    function updateModeUI() {
+      const pill = document.getElementById('mode-badge-pill');
+      const dot = document.getElementById('mode-status-dot');
+      const label = document.getElementById('mode-text-label');
+      const heroTag = document.getElementById('hero-badge-tag');
+      const profileBadge = document.getElementById('profile-tier-badge');
+      const btnText = document.getElementById('btn-launch-text');
+
+      if (appState.isPro) {
+        pill.className = "px-3.5 py-1.5 rounded-full text-xs font-black flex items-center space-x-1.5 transition-all duration-300 bg-rose-500/20 border border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20";
+        dot.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
+        label.innerText = "PRO MODE ACTIVATED";
+        
+        heroTag.className = "text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border tracking-wider inline-flex items-center bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        heroTag.innerHTML = `<i class="fa-solid fa-bolt mr-1"></i> PRO Engine Ready • Unlimited Deployments`;
+
+        profileBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full border bg-rose-500/20 text-rose-300 border-rose-500/40";
+        profileBadge.innerText = "PRO VIP ACTIVATED";
+
+        btnText.innerText = "Deploy Watch Time & Boost Views (Instant)";
+      } else {
+        pill.className = "px-3.5 py-1.5 rounded-full text-xs font-black flex items-center space-x-1.5 transition-all duration-300 bg-zinc-800/90 border border-zinc-700/80 text-zinc-400 shadow-md";
+        dot.className = "w-2 h-2 rounded-full bg-zinc-500";
+        label.innerText = "NORMAL MODE";
+
+        heroTag.className = "text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border tracking-wider inline-flex items-center bg-amber-500/10 text-amber-400 border-amber-500/20";
+        heroTag.innerHTML = `<i class="fa-solid fa-shield-halved mr-1"></i> Deposit Required To Activate Engine`;
+
+        profileBadge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full border bg-zinc-800 text-zinc-400 border-zinc-700";
+        profileBadge.innerText = "NORMAL USER";
+
+        btnText.innerText = "Unlock Engine (Deposit Required)";
+      }
+    }
+
+    // Extract YouTube Video ID
+    function extractYouTubeVideoID(url) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    // Live URL Input Typing Inspector
+    function handleUrlInput(e) {
+      const val = e.target.value.trim();
+      const videoId = extractYouTubeVideoID(val);
+      if (videoId) {
+        inspectVideo(videoId, val);
+      } else {
+        document.getElementById('video-preview-box').classList.add('hidden');
+        activeVideoMeta = null;
+      }
+    }
+
+    function inspectVideoManually() {
+      const val = document.getElementById('input-yt-url').value.trim();
+      const videoId = extractYouTubeVideoID(val);
+      if (videoId) {
+        inspectVideo(videoId, val);
+      } else {
+        showToast("Please enter a valid YouTube link!", "error");
+      }
+    }
+
+    // Inspect & Fetch Real YouTube Title & Thumbnail
+    async function inspectVideo(videoId, rawUrl) {
+      const previewBox = document.getElementById('video-preview-box');
+      const thumbImg = document.getElementById('preview-thumbnail');
+      const titleElem = document.getElementById('preview-title');
+
+      const highResThumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      thumbImg.src = highResThumb;
+      titleElem.innerText = "Connecting to YouTube stream...";
+      previewBox.classList.remove('hidden');
+
+      // Fetch Real Title via Noembed
+      let fetchedTitle = `YouTube Video #${videoId}`;
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.title) fetchedTitle = data.title;
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+
+      titleElem.innerText = fetchedTitle;
+      activeVideoMeta = {
+        videoId: videoId,
+        title: fetchedTitle,
+        thumbnail: highResThumb,
+        url: rawUrl
+      };
+      showToast("YouTube video connected successfully!", "success");
+    }
+
+    // Launch Campaign Handler
+    function handleLaunchCampaign() {
+      if (!appState.isPro) {
+        showToast("Deposit required! Please choose a plan below to activate PRO mode.", "error");
+        switchTab('deposit');
+        return;
+      }
+
+      if (!activeVideoMeta) {
+        showToast("Please paste a valid YouTube video link first!", "error");
+        document.getElementById('input-yt-url').focus();
+        return;
+      }
+
+      const country = document.getElementById('country-select').value;
+
+      // Add to campaign history
+      const newOrder = {
+        id: "YT_" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+        title: activeVideoMeta.title,
+        thumbnail: activeVideoMeta.thumbnail,
+        country: country,
+        time: "Just now",
+        status: "Active (Rollout in 10 mins)"
+      };
+
+      appState.campaigns.unshift(newOrder);
+      localStorage.setItem('yt_boost_state', JSON.stringify(appState));
+
+      // Reset input
+      document.getElementById('input-yt-url').value = '';
+      document.getElementById('video-preview-box').classList.add('hidden');
+      activeVideoMeta = null;
+
+      // Celebrate
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      showToast("Order Executed! Check YT Studio after 10 minutes.", "success");
+      renderCampaignHistory();
+      switchTab('profile');
+    }
+
+    // Render Campaign List
+    function renderCampaignHistory() {
+      const container = document.getElementById('campaign-history-list');
+      const emptyState = document.getElementById('empty-campaign-state');
+
+      if (appState.campaigns.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      let rows = '';
+      appState.campaigns.forEach(c => {
+        rows += `
+          <div class="p-3.5 rounded-2xl bg-[#09090d] border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+              <img src="${c.thumbnail}" class="w-16 h-11 rounded-lg object-cover border border-zinc-700 flex-shrink-0">
+              <div class="space-y-0.5">
+                <h5 class="text-xs font-bold text-white line-clamp-1">${c.title}</h5>
+                <div class="flex items-center space-x-2 text-[10px] text-zinc-400">
+                  <span class="text-cyan-400">${c.country}</span>
+                  <span>• ${c.time}</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> ${c.status}
+            </span>
+          </div>
+        `;
+      });
+      container.innerHTML = rows;
+    }
+
+    // Deposit Flow
+    function triggerDeposit(amount, packDesc) {
+      pendingDepositPlan = { amount, packDesc };
+      document.getElementById('modal-deposit-amount').innerText = `₹${amount} INR`;
+      document.getElementById('modal-deposit-pack').innerText = packDesc;
+      document.getElementById('deposit-modal').classList.remove('hidden');
+    }
+
+    function closeDepositModal() {
+      document.getElementById('deposit-modal').classList.add('hidden');
+      pendingDepositPlan = null;
+    }
+
+    function executeDepositSuccess() {
+      if (!pendingDepositPlan) return;
+
+      // Unlock Pro Mode Permanently
+      appState.isPro = true;
+      localStorage.setItem('yt_boost_state', JSON.stringify(appState));
+
+      closeDepositModal();
+      updateModeUI();
+
+      // Confetti celebration
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+      showToast(`Payment of ₹${pendingDepositPlan.amount} received! PRO MODE is now unlocked.`, "success");
+      switchTab('home');
+    }
+
+    // Profile DP Change
+    function triggerDpChange() {
+      const url = prompt("Enter your new Avatar/DP image URL:");
+      if (url && url.startsWith('http')) {
+        appState.userDp = url;
+        document.getElementById('user-dp-img').src = url;
+        localStorage.setItem('yt_boost_state', JSON.stringify(appState));
+        showToast("Profile avatar updated successfully!", "success");
+      }
+    }
+
+    // Tab Navigation
+    function switchTab(tabKey) {
+      ['home', 'deposit', 'profile'].forEach(t => {
+        document.getElementById(`tab-${t}-view`).classList.add('hidden');
+        const btn = document.getElementById(`nav-btn-${t}`);
+        btn.classList.remove('text-rose-500');
+        btn.classList.add('text-zinc-400');
+      });
+
+      document.getElementById(`tab-${tabKey}-view`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-btn-${tabKey}`);
+      activeBtn.classList.add('text-rose-500');
+      activeBtn.classList.remove('text-zinc-400');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Toast Function
+    function showToast(msg, type = 'success') {
+      const banner = document.getElementById('toast-banner');
+      const text = document.getElementById('toast-msg');
+      const icon = document.getElementById('toast-icon');
+
+      text.innerText = msg;
+      banner.className = "fixed top-16 right-4 z-50 max-w-sm p-4 rounded-2xl text-xs font-bold shadow-2xl flex items-center justify-between border ";
+      if (type === 'success') {
+        banner.classList.add('bg-[#101015]', 'text-emerald-400', 'border-emerald-500/40');
+        icon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+      } else {
+        banner.classList.add('bg-[#101015]', 'text-rose-400', 'border-rose-500/40');
+        icon.className = 'fa-solid fa-circle-xmark text-rose-400 text-base';
+      }
+      banner.classList.remove('hidden');
+      setTimeout(hideToast, 4000);
+    }
+    function hideToast() { document.getElementById('toast-banner').classList.add('hidden'); }
+
+    // Run on load
+    initApp();
+  </script>
+</body>
+</html>
